@@ -13,7 +13,6 @@ jobs:
           RAILS_ENV: test
           MAX_THREADS: 2
           WEB_CONCURRENCY: 1
-          BUNDLER_VERSION: 2.0.2
 
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
@@ -29,9 +28,17 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
           POSTGRES_DB: web_app
-          BUNDLER_VERSION: 2.0.2
     steps:
       - checkout
       - run:
           name: Which bundler?
           command: bundle -v
+
+      - run:
+          command: gem install bundler
+
+      - run:
+          command: yarn install
+
+      - run:
+          command: bundle install
