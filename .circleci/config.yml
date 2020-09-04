@@ -3,140 +3,55 @@
 # Check https://circleci.com/docs/2.0/language-ruby/ for more details
 #
 
-version: 2.1 # Use 2.1 to enable using orbs and other features.
-
-# Declare the orbs that we'll use in our config.
-# read more about orbs: https://circleci.com/docs/2.0/using-orbs/
-orbs:
-  ruby: circleci/ruby@1.0
-  node: circleci/node@2
-
 jobs:
-  build: # our first job, named "build"
+  build:
+    working_directory: ~/app
     docker:
+      # specify the version you desire here
       - image: circleci/ruby:2.6.3-node-browsers
         environment:
-        RAILS_ENV: test
-        MAX_THREADS: 2
-        WEB_CONCURRENCY: 1
+          RAILS_ENV: test
+          MAX_THREADS: 2
+          WEB_CONCURRENCY: 1
 
-        POSTGRES_PASSWORD: postgres
-        POSTGRES_USER: postgres
-        POSTGRES_DB: web_app
-        POSTGRES_HOST: 127.0.0.1
-        POSTGRES_PORT: 5432
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: web_app
+          POSTGRES_HOST: 127.0.0.1
+          POSTGRES_PORT: 5432
 
-        # Specify service dependencies here if necessary
-        # CircleCI maintains a library of pre-built images
-        # documented at https://circleci.com/docs/2.0/circleci-images/
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
       - image: circleci/postgres:9.5-alpine
         environment:
-        POSTGRES_PASSWORD: postgres
-        POSTGRES_USER: postgres
-        POSTGRES_DB: web_app
-
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: web_app
     steps:
-      - checkout # pull down our git code.
-      - ruby/install-deps # use the ruby orb to install dependencies
-      # use the node orb to install our packages
-      # specifying that we use `yarn` and to cache dependencies with `yarn.lock`
-      # learn more: https://circleci.com/docs/2.0/caching/
-      - node/install-packages:
-          pkg-manager: yarn
-          cache-key: "yarn.lock"
-
-  test:  # our next job, called "test"
-    # we run "parallel job containers" to enable speeding up our tests;
-    # this splits our tests across multiple containers.
-    parallelism: 3
-
-    test:
-      # run tests!
+      - checkout
       - run:
-          name: run tests
+          name: configure bundler
           command: |
-            mkdir /tmp/test-results
-            TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)"
+            echo 'export BUNDLER_VERSION=$(cat Gemfile.lock | tail -1 | tr -d " ")' >> $BASH_ENV
+            source $BASH_ENV
+            gem install bundler
 
-            bundle exec rspec --format progress \
-                            --format RspecJunitFormatter \
-                            --out /tmp/test-results/rspec.xml \
-                            --format progress \
-                            $TEST_FILES
+  test:
+    # run tests!
+    - run:
+        name: run tests
+        command: |
+          mkdir /tmp/test-results
+          TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)"
+
+          bundle exec rspec --format progress \
+                          --format RspecJunitFormatter \
+                          --out /tmp/test-results/rspec.xml \
+                          --format progress \
+                          $TEST_FILES
 
 
-      # collect reports
-      - store_test_results:
-          path: /tmp/test-results
-
-# We use workflows to orchestrate the jobs that we declared above.
-workflows:
-  version: 2
-  build_and_test:     # The name of our workflow is "build_and_test"
-    jobs:             # The list of jobs we run as part of this workflow.
-      - build         # Run build first.
-      - test:         # Then run test,
-          requires:   # Test requires that build passes for it to run.
-            - build   # Finally, run the build job.
-
-#version: 2
-#workflows:
-#  build_and_test:     # The name of our workflow is "build_and_test"
-#    jobs:             # The list of jobs we run as part of this workflow.
-#      - build         # Run build first.
-#      - test:         # Then run test,
-#          requires:   # Test requires that build passes for it to run.
-#            - build
-#
-#jobs:
-#  build:
-#    working_directory: ~/app
-#    docker:
-#      # specify the version you desire here
-#      - image: circleci/ruby:2.6.3-node-browsers
-#        environment:
-#          RAILS_ENV: test
-#          MAX_THREADS: 2
-#          WEB_CONCURRENCY: 1
-#
-#          POSTGRES_PASSWORD: postgres
-#          POSTGRES_USER: postgres
-#          POSTGRES_DB: web_app
-#          POSTGRES_HOST: 127.0.0.1
-#          POSTGRES_PORT: 5432
-#
-#      # Specify service dependencies here if necessary
-#      # CircleCI maintains a library of pre-built images
-#      # documented at https://circleci.com/docs/2.0/circleci-images/
-#      - image: circleci/postgres:9.5-alpine
-#        environment:
-#          POSTGRES_PASSWORD: postgres
-#          POSTGRES_USER: postgres
-#          POSTGRES_DB: web_app
-#    steps:
-#      - checkout
-#      - run:
-#          name: configure bundler
-#          command: |
-#            echo 'export BUNDLER_VERSION=$(cat Gemfile.lock | tail -1 | tr -d " ")' >> $BASH_ENV
-#            source $BASH_ENV
-#            gem install bundler
-#
-#  test:
-#    # run tests!
-#    - run:
-#        name: run tests
-#        command: |
-#          mkdir /tmp/test-results
-#          TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)"
-#
-#          bundle exec rspec --format progress \
-#                          --format RspecJunitFormatter \
-#                          --out /tmp/test-results/rspec.xml \
-#                          --format progress \
-#                          $TEST_FILES
-#
-#
-#    # collect reports
-#    - store_test_results:
-#        path: /tmp/test-results
+    # collect reports
+    - store_test_results:
+        path: /tmp/test-results
