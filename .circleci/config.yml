@@ -8,7 +8,7 @@ workflows:
   build_and_test:
     - build         # Run build first.
     - test:         # Then run test,
-      requires:   # Test requires that build passes for it to run.
+      requires:     # Test requires that build passes for it to run.
         - build
 
 jobs:
@@ -51,10 +51,13 @@ jobs:
         name: run tests
         command: |
           mkdir /tmp/test-results
+          TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)"
 
           bundle exec rspec --format progress \
                           --format RspecJunitFormatter \
                           --out /tmp/test-results/rspec.xml \
+                          --format progress \
+                          $TEST_FILES
 
 
     # collect reports
