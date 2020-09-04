@@ -2,6 +2,16 @@
 #
 # Check https://circleci.com/docs/2.0/language-ruby/ for more details
 #
+
+workflows:
+  version: 2
+  build_and_test:     # The name of our workflow is "build_and_test"
+    jobs:             # The list of jobs we run as part of this workflow.
+      - build         # Run build first.
+      - test:         # Then run test,
+          requires:   # Test requires that build passes for it to run.
+            - build
+
 jobs:
   build:
     working_directory: ~/app
@@ -54,12 +64,3 @@ jobs:
     # collect reports
     - store_test_results:
         path: /tmp/test-results
-
-workflows:
-  version: 2
-  build_and_test:     # The name of our workflow is "build_and_test"
-    jobs:             # The list of jobs we run as part of this workflow.
-      - build         # Run build first.
-      - test:         # Then run test,
-          requires:   # Test requires that build passes for it to run.
-            - build
