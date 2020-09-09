@@ -41,7 +41,7 @@ jobs:
           name: configure bundler
           command: |
             gem install bundler
-            bundle install --jobs=4 --retry=3 --path vendor/bundle`
+            bundle install --jobs=4 --retry=3 --path vendor/bundle
 
       # Save the cache so we don't have to install the gems every time
       - save_cache:
