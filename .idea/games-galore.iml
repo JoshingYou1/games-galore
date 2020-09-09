@@ -13,11 +13,11 @@
     <shared />
   </component>
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$">
+    <content url="file://$MODULE_DIR$/../games-galore">
       <sourceFolder url="file://$MODULE_DIR$/features" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/spec" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../games-galore/spec" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
-      <excludeFolder url="file://$MODULE_DIR$/tmp/cache" />
+      <excludeFolder url="file://$MODULE_DIR$/../games-galore/tmp/cache" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

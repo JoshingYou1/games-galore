@@ -3,16 +3,15 @@
 # Check https://circleci.com/docs/2.0/language-ruby/ for more details
 #
 version: 2
+
 workflows:
   version: 2
-  build_and_test:
-    - build         # Run build first.
-    - test:         # Then run test,
-      requires:     # Test requires that build passes for it to run.
-        - build
+  test:
+    jobs:
+      - test
 
 jobs:
-  build:
+  test:
     working_directory: ~/app
     docker:
       # specify the version you desire here
@@ -25,8 +24,6 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
           POSTGRES_DB: web_app
-          POSTGRES_HOST: 127.0.0.1
-          POSTGRES_PORT: 5432
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -36,30 +33,40 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
           POSTGRES_DB: web_app
+
+    # here's what we want to do
     steps:
       - checkout
       - run:
           name: configure bundler
           command: |
-            echo 'export BUNDLER_VERSION=$(cat Gemfile.lock | tail -1 | tr -d " ")' >> $BASH_ENV
-            source $BASH_ENV
             gem install bundler
+            bundle install --jobs=4 --retry=3 --path vendor/bundle`
 
-  test:
-    # run tests!
-    - run:
-        name: run tests
-        command: |
-          mkdir /tmp/test-results
-          TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)"
+      # Save the cache so we don't have to install the gems every time
+      - save_cache:
+          paths:
+            - ./vendor/bundle
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
 
-          bundle exec rspec --format progress \
-                          --format RspecJunitFormatter \
-                          --out /tmp/test-results/rspec.xml \
-                          --format progress \
-                          $TEST_FILES
+      # Database setup
+      - run: bundle exec rails db:create
+      - run: bundle exec rails db:schema:load
+
+      # run tests!
+      - run:
+          name: run tests
+          command: |
+            mkdir /tmp/test-results
+            TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)"
+
+            bundle exec rspec --format progress \
+                            --format RspecJunitFormatter \
+                            --out /tmp/test-results/rspec.xml \
+                            --format progress \
+                            $TEST_FILES
 
 
-    # collect reports
-    - store_test_results:
-        path: /tmp/test-results
+      # collect reports
+      - store_test_results:
+          path: /tmp/test-results
