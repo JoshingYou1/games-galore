@@ -1,1 +1,13 @@
 <h1>Hello world!</h1>
+<%# @games['results'].each do |game| %>
+<!--  <div style="display: inline-block">-->
+<!--    <div><%#= game['name'] %></div>-->
+  <%#= image_tag(game['background_image'], style: 'height: 200px') %>
+<!--  </div>-->
+<%# end %>
+<% @popular_games['results'].each do |game| %>
+  <div style="display: inline-block">
+    <div><%= game['name'] %></div>
+    <%= image_tag(game['background_image'], style: 'height: 200px') %>
+  </div>
+<% end %>
